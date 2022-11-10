@@ -2,6 +2,7 @@ import shutil
 from fastapi import APIRouter, UploadFile, File, Form, Request
 from schemas import UploadImage, GetImage, Message
 from fastapi.responses import JSONResponse
+from models import Image
 
 service_router = APIRouter()
 
@@ -12,6 +13,12 @@ async def root(title: str = Form(), description: str = Form(), file: UploadFile 
     with open(f'{file.filename}', 'wb') as f:
         shutil.copyfileobj(file.file, f)
     return {'file_name': file.filename, "info": info}
+
+
+@service_router.post("/img")
+async def create_image(image: Image):
+    await image.save()
+    return image
 
 
 @service_router.get("/img", response_model=GetImage, responses={404: {'model': Message}})
