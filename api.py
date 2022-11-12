@@ -2,36 +2,20 @@ import shutil
 from fastapi import APIRouter, UploadFile, File, Form, Request
 from schemas import UploadImage, GetImage, Message
 from fastapi.responses import JSONResponse
-from models import Image
+from models import Image, User
 
 service_router = APIRouter()
 
 
 @service_router.post("/")
-async def root(title: str = Form(), description: str = Form(), file: UploadFile = File()):
+async def create_image(title: str = Form(), description: str = Form(), file: UploadFile = File()):
     info = UploadImage(title=title, description=description)
     with open(f'{file.filename}', 'wb') as f:
         shutil.copyfileobj(file.file, f)
-    return {'file_name': file.filename, "info": info}
+    user = await User.objects.first()
+    return await Image.objects.create(file=file.filename, user=user, **info.dict())
 
 
-@service_router.post("/img")
-async def create_image(image: Image):
-    await image.save()
-    return image
-
-
-@service_router.get("/img", response_model=GetImage, responses={404: {'model': Message}})
-async def get_image():
-    user = {'id': 10, 'name': 'Baron'}
-    image = {'title': 'Test', 'description': 'Description'}
-    info = GetImage(user=user, image=image)
-    # return info
-    return JSONResponse(status_code=404, content={'message': 'Item not found'})
-
-
-@service_router.get("/test")
-async def get_test(req: Request):
-    # Информация о запросе
-    print(req.base_url)
-    return {}
+@service_router.get("/img/{image_pk}", response_model=GetImage, responses={404: {'model': Message}})
+async def get_image(image_pk: int):
+    return await Image.objects.select_related('user').get(pk=image_pk)
