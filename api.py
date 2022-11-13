@@ -1,17 +1,26 @@
 import shutil
-from fastapi import APIRouter, UploadFile, File, Form, Request
+from fastapi import APIRouter, UploadFile, File, Form, Request, BackgroundTasks, HTTPException
 from schemas import UploadImage, GetImage, Message
 from fastapi.responses import JSONResponse
 from models import Image, User
+from services import save_image
 
 service_router = APIRouter()
 
 
 @service_router.post("/")
-async def create_image(title: str = Form(), description: str = Form(), file: UploadFile = File()):
+async def create_image(
+        background_tasks: BackgroundTasks,
+        title: str = Form(),
+        description: str = Form(),
+        file: UploadFile = File()
+):
+    file_name = f'media/{file.filename}'
+    if file.content_type == 'image/jpeg':
+        background_tasks.add_task(save_image, file_name, file)
+    else:
+        raise HTTPException(status_code=404, detail='Формат файла не jpeg !')
     info = UploadImage(title=title, description=description)
-    with open(f'{file.filename}', 'wb') as f:
-        shutil.copyfileobj(file.file, f)
     user = await User.objects.first()
     return await Image.objects.create(file=file.filename, user=user, **info.dict())
 
