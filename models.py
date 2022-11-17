@@ -24,7 +24,7 @@ class Image(ormar.Model):
 
     id: int = ormar.Integer(primary_key=True)
     title: str = ormar.String(max_length=45)
-    # description: str = ormar.String(max_length=300)
+    description: str = ormar.String(max_length=300)
     file: str = ormar.String(max_length=800)
     create_at: datetime.datetime = ormar.DateTime(default=datetime.datetime.now)
     user:Optional[User] = ormar.ForeignKey(User)

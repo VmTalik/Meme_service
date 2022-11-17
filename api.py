@@ -22,7 +22,7 @@ async def create_image(
         raise HTTPException(status_code=404, detail='Формат файла не jpeg !')
     info = UploadImage(title=title, description=description)
     user = await User.objects.first()
-    return await Image.objects.create(file=file.filename, user=user, **info.dict())
+    return await Image.objects.create(file=file_name, user=user, **info.dict())
 
 
 @service_router.get("/img/{image_pk}", response_model=GetImage, responses={404: {'model': Message}})
