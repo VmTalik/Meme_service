@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api import service_router
+from meme.api import service_router
 from db import database, metadata, engine
 
 app = FastAPI()
